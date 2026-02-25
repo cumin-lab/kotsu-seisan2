@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -478,12 +479,23 @@ let localSettings = { dept: '', name: '' };
 let cachedEntries = []; // 今月のキャッシュ
 
 // ============ GAS API呼び出し ============
+// 読み取り系はGET、書き込み系はPOST（no-cors）
+const READ_ACTIONS = ['getEntries', 'getRoutes'];
+
 async function gasCall(action, params = {}) {
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action, ...params }),
-  });
-  return res.json();
+  if (READ_ACTIONS.includes(action)) {
+    // GETリクエスト（CORSを通せる）
+    const qs = new URLSearchParams({ action, ...params }).toString();
+    const res = await fetch(`${GAS_URL}?${qs}`);
+    return res.json();
+  } else {
+    // POSTリクエスト（書き込み）
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action, ...params }),
+    });
+    return res.json();
+  }
 }
 
 // ============ Google ログイン ============
